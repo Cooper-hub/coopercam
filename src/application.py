@@ -59,5 +59,4 @@ class Application:
                 # Wait for shutdown to complete
                 for producer in self.producers.values():
                     producer.join()
-
         log.info('\'Application\' terminated.')

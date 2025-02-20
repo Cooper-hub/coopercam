@@ -2,6 +2,7 @@ import queue
 import time
 import numpy
 import cv2
+import threading
 from vmbpy import *  # Or import only the necessary modules for your class
 import sys
 import os
@@ -29,9 +30,10 @@ class FrameConsumer:
         self.frame_queue = frame_queue
         self.last_time = time.time()
         self.frame_count = 0
+        self.frame_accumulated = 0  # To accumulate frame count for averaging
 
     def run(self):
-        IMAGE_CAPTION = 'Multithreading Example: Press <Enter> to exit'
+        IMAGE_CAPTION = 'Downscaled Preview: Press <Enter> to exit'
         KEY_CODE_ENTER = 13
 
         frames = {}
@@ -61,10 +63,9 @@ class FrameConsumer:
             # Construct image by stitching frames together.
             if frames:
                 cv_images = [frames[cam_id].as_opencv_image() for cam_id in sorted(frames.keys())]
-                # cv2.imshow(IMAGE_CAPTION, numpy.concatenate(cv_images, axis=1))
+                
                 newimg = []
                 for img in cv_images:
-                   # Initialize the detector 
                    resized_img = cv2.resize(img, (1006, 759))
                    newimg.append(resized_img)
 
@@ -74,13 +75,18 @@ class FrameConsumer:
                 cv2.imshow(IMAGE_CAPTION, create_dummy_frame())
 
             self.frame_count += 1
+            self.frame_accumulated += 1  # Increment the accumulated frame count
             current_time = time.time()
             elapsed = current_time - self.last_time
 
-            if elapsed >= 1.0:  
-                print(f"[DISPLAY FPS] {self.frame_count:.2f} frames/sec")
+            if self.frame_accumulated >= 70:  # Check if we have processed 70 frames
+                avg_fps = self.frame_count / elapsed  # Calculate the FPS for the last 70 frames
+                print(f"[DISPLAY FPS (avg over 70 frames)] {avg_fps:.2f} frames/sec")
+                
+                # Reset the counters
                 self.frame_count = 0
-                self.last_time = current_time
+                self.frame_accumulated = 0  # Reset accumulated frame count
+                self.last_time = current_time  # Reset the time for the next set of 70 frames
 
             # Check for shutdown condition
             if KEY_CODE_ENTER == cv2.waitKey(10):
