@@ -7,7 +7,12 @@ import cv2
 import numpy
 import time
 import sys
-sys.path.append("C:/Users/Toby/Desktop/CapstoneProject/enhanced_python_aprilgrid/src/")
+import os
+script_dir = os.path.dirname(os.path.realpath(__file__))
+relative_path = os.path.join(script_dir, '..')
+normalized_path = os.path.abspath(relative_path) 
+sys.path.append(normalized_path)
+
 from aprilgrid import Detector
 from vmbpy import *
 
